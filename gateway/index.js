@@ -12,5 +12,5 @@ app.use('/user', proxy('http://localhost:8002'))
 app.use('/order', proxy('http://localhost:8003'))
 
 app.listen(8000, ()=>{
-    console.log(`Listening on prt 8000`)
+    console.log(`Listening on port 8000`)
 })

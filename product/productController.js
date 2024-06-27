@@ -107,11 +107,38 @@ async function deleteProduct(req, res){
     }
 }
 
+async function productAvailability(req, res){
+    try{
+        console.log("inside product availability fxn")
+        const {name, quantity} = req.query
+
+        console.log("name , quantity", name, quantity)
+        
+        let product = await Product.findOne({name: name})
+
+        if(!product){
+            return res.status(400).json({message: "Product not present !!"})
+        }
+        
+        if(product.quantity < quantity){
+            return res.status(200).json({message: "Not in stock !!"})
+        }
+
+        let updateProduct = await Product.findOneAndUpdate({name: name}, {$inc: {quantity: -quantity}}, {new: true})
+
+        return res.status(200).json({isFound: true})
+
+    } catch(err){
+        return res.status(500).json({message: err.message})
+    }
+}
+
 module.exports = {
     addProducts,
     updateProduct,
     getProductDetails,
     listProducts,
-    deleteProduct
+    deleteProduct,
+    productAvailability
 }
 

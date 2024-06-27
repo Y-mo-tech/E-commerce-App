@@ -11,6 +11,8 @@ router.get('/getProductDetails', path.getProductDetails)
 
 router.get('/listProducts', path.listProducts)
 
+router.get('/productAvailability', path.productAvailability)
+
 router.delete('/deleteProduct', path.deleteProduct)
 
 module.exports = router
