@@ -16,6 +16,10 @@ const productSchema = mongoose.Schema({
     quantity:{
         type: Number,
         required: true
+    },
+    version:{
+        type: Number,
+        default: 0
     }
     
 })

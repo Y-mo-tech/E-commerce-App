@@ -7,7 +7,7 @@ async function checkAuth(req, res, next){
 
         console.log("token in check auth fxn=========>", token)
         let method = 'GET'
-        let url = 'http://localhost:8002/auth'
+        let url = 'http://user-service:8002/auth'
         let params = {
             token: token
         }
@@ -18,7 +18,7 @@ async function checkAuth(req, res, next){
         }
     
         let response = await axios(options)          // req.headers.authorization
-        console.log("axios response", response)
+        // console.log("xaxios response", response)
         if(response.data.isAuthenticated){
             console.log("_+_+_+++++++++++++++++++++++++++++++++++++")
             let userId = response.data.userId

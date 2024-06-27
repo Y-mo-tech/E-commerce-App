@@ -1,4 +1,6 @@
-const Product = require ('./productSchema')
+const Product = require ('../db/productSchema')
+
+const DB_Concurrency_Error = 'Concurrency_DB_Error'
 
 async function addProducts(req, res){
     try{
@@ -107,29 +109,87 @@ async function deleteProduct(req, res){
     }
 }
 
-async function productAvailability(req, res){
-    try{
-        console.log("inside product availability fxn")
-        const {name, quantity} = req.query
+const updateProductQuantityWithRetry = async (productId, quantity, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            await updateProductQuantity(productId, quantity);
+            return;
+        } catch (err) {
+            if (i === retries - 1) {
+                throw err;
+            }
+            console.log('Retrying update...');
+        }
+    }
+};
 
-        console.log("name , quantity", name, quantity)
-        
-        let product = await Product.findOne({name: name})
+async function productAvailability(req, res){
+
+    const {product_id, quantity} = req.body
+    const retries = 3
+
+    for (let i = 0; i < retries; i++) {
+        try {
+            await updateProductQuantity(product_id, quantity);
+            return res.status(200).json({success: true, message: 'Product quantity placed!'});
+        } catch (err) {
+
+            if (err.message != DB_Concurrency_Error){
+                return res.status(400).json({message: err.message})
+            }
+
+            if (i === retries - 1) {
+                return res.status(400).json({message: 'Order can not be placed, Please try again later.'})
+            }
+
+            console.log('Retrying update...');
+        }
+    }
+
+
+
+}
+
+const updateProductQuantity = async (product_id, quantity)=>{
+    try{
+        console.log("inside updateProductQuantity fxn")
+
+        let product = await Product.findOne({_id: product_id})
 
         if(!product){
-            return res.status(400).json({message: "Product not present !!"})
+            throw new Error("Product not present !!")
+            // return res.status(400).json({message: "Product not present !!"})
         }
-        
+
         if(product.quantity < quantity){
-            return res.status(200).json({message: "Not in stock !!"})
+            throw new Error("Not in stock !!")
+            // return res.status(200).json({message: "Not in stock !!"})
         }
 
-        let updateProduct = await Product.findOneAndUpdate({name: name}, {$inc: {quantity: -quantity}}, {new: true})
+        let result = await Product.updateOne(
+            {_id: product._id,
+                version: product.version
+            },
+            {
+                $set: {
+                    quantity: product.quantity - quantity
+                },
+                $inc:{
+                    version:1
+                }
+            },
+            {new: true}
+        )
 
-        return res.status(200).json({isFound: true})
+        if (result.nModified === 0) {
+            throw new Error(DB_Concurrency_Error);
+        }
+
+        return {message: 'Order Placed'}
 
     } catch(err){
-        return res.status(500).json({message: err.message})
+        throw err
+        // return res.status(500).json({message: err.message})
     }
 }
 

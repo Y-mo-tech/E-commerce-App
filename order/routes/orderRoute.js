@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const path = require('./orderController')
-const isAuthenticated = require('./checkAuth')
+const path = require('../controllers/orderController')
+const isAuthenticated = require('../middleware/checkAuth')
 
 console.log("inside order route============================")
 

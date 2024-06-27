@@ -1,37 +1,33 @@
-const Order = require('./orderSchema')
+const Order = require('../db/orderSchema')
 const axios = require('axios')
 
 async function addOrder(req, res){
     try{
         console.log("indsie add order fxn++++++++++++++++++++++++")
-        const {name, quantity} = req.body;
-        console.log(name, quantity)
+        const {product_id, quantity} = req.body;
+        // console.log(product_id, quantity)
         const {userId} = req.auth
 
         console.log("userId-----------", userId)
 
-        if(!name || !quantity){
+        if(!product_id || !quantity){
             return res.status(400).json({message: "Please enter fields properly !!"})
         }
-        let method = 'GET'
-        let url = 'http://localhost:8001/productAvailability'
+
+        let url = 'http://product-service:8001/productAvailability'
         let params = {
-            name: name,
+            product_id: product_id,
             quantity: quantity
         }
-        let options = {
-            method,
-            url,
-            params
-        }
-        let response = await axios(options)
+
+        let response = await axios.post(url, params)
 
         console.log("response in addorder axios-=--=-=-=-=", response.data)
 
-        if(response?.data?.isFound){
-            console.log("response?.data?.isfound", response?.data?.isFound)
+        if(response.status == 200){
+
             let order = new Order({
-                name: name,
+                product_id: product_id,
                 quantity: quantity,
                 userId: userId
             })
@@ -64,7 +60,7 @@ async function updateOrder(req, res){
        let name = findOrder.name
 
        let method = 'GET'
-        let url = 'http://localhost:8001/productAvailability'
+        let url = 'http://product-service:8001/productAvailability'
         let params = {
             name: name,
             quantity: quantity
