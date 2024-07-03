@@ -57,23 +57,17 @@ async function updateOrder(req, res){
         return res.status(400).json({message: "Order not found !!!"})
        } 
 
-       let name = findOrder.name
+       let product_id = findOrder.product_id
 
-       let method = 'GET'
         let url = 'http://product-service:8001/productAvailability'
         let params = {
-            name: name,
+            product_id: product_id,
             quantity: quantity
         }
-        let options = {
-            method,
-            url,
-            params
-        }
-        let response = await axios(options)
+        
+        let response = await axios.post(url, params)
 
-        if(response?.data?.isFound){
-            console.log("response?.data?.isfound", response?.data?.isFound)
+        if(response?.status == 200){
             let orderUpdate = await Order.findByIdAndUpdate(orderId, {$inc: {quantity: quantity}}, {new: true})
 
             return res.status(200).json({message: "Order updated successfully !!", orderUpdate})
